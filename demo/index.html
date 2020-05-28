@@ -25,7 +25,21 @@
       <h3>Basic vetprovieh-select demo</h3>
       <demo-snippet>
         <template>
-          <vetprovieh-select></vetprovieh-select>
+          <vetprovieh-select id="namen" property="id" display="name" src="names/index.json">
+            <template>
+              <div style="padding:15px">
+                <strong>{{id}}</strong>: <span>{{name}}</span>
+              </div>
+            </template>
+          </vetprovieh-select>
+          <input id="x" class="input" placeholder="Another Input" type="text"/>
+
+          <script>
+            let select = document.getElementById("namen");
+            select.addEventListener("change", (event) => {
+              console.log("My Value is "+ event.target.value);
+            })
+          </script>
         </template>
       </demo-snippet>
     </div>

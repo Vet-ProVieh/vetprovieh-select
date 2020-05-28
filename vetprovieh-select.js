@@ -13,26 +13,90 @@ class VetproviehSelect extends HTMLElement {
   static get template() {
     return `
       <link href="../node_modules/bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
-      <input id="search" class="input" type="text"/>
-      <div id="list">
-      x
-        <vetprovieh-list src="names/index.json" pagesize="5">
-            <template>
-                <span>{{firstname}}</span>
-            </template>
-        </vetprovieh-list>
+      <style>
+      #list {
+        box-shadow: 1px 3px 5px #C0C0C0;
+        margin-top: -20px;
+        margin-left: 10px;
+        width:100%;
+        position: absolute;
+        z-index: 1000;
+        background: white;
+        }
+      </style>
+      <div>
+        <input id="search" class="input" type="text"/>
+        <input id="currentValue" type="hidden"/>
+        <div id="list" class="is-hidden">
+        </div>
       </div>
     `;
+  }
+
+  static get observedAttributes() {
+    return ['src','value', 'property', 'display'];
+  }
+
+  attributeChangedCallback(name, old, value) {
+    if (old !== value) {
+      this[name] = value;
+    }
   }
 
   constructor(props) {
     super(props);
 
     this._properties = {
-      src: null
+      src: null,
+      list_element_template: null,
+      searchList: null,
+      value: null,
+      property: null,
+      display: null
+    }
+    let template  = this.querySelector("template");
+    if(template) this._properties.list_element_template = template;
+  }
+
+  /**
+   * @property {string|null} value
+   */
+  get value() {
+    return this._properties.value;
+  }
+
+  set value(val) {
+    if (val !== this.value) {
+      this._properties.value = val;
+      this._dispatchChange();
     }
   }
 
+  /**
+   * @property {string|null} display
+   */
+  get display() {
+    return this._properties.display;
+  }
+
+  set display(val) {
+    if (val !== this.display) {
+      this._properties.display = val;
+    }
+  }
+
+  /**
+   * @property {string|null} property
+   */
+  get property() {
+    return this._properties.property;
+  }
+
+  set property(val) {
+    if (val !== this.property) {
+      this._properties.property = val;
+    }
+  }
 
   /**
    * @property {string|null} src
@@ -54,8 +118,75 @@ class VetproviehSelect extends HTMLElement {
         mode: 'open'
       }).innerHTML = VetproviehSelect.template;
     }
+    this._addFieldListener();
   }
 
+  _addFieldListener() {
+    let searchField = this.shadowRoot.getElementById("search");
+
+    if(!this._properties.searchList){
+      this._properties.searchList = this._buildSearchList();
+      this.shadowRoot.getElementById("list").appendChild(this._properties.searchList)
+    }
+
+    let searchDiv = this.shadowRoot.getElementById("list");
+    let searchList = this._properties.searchList;
+    searchField.addEventListener("keyup", (event) => {
+        let value = event.target.value;
+        if(value){
+          searchDiv.classList.remove("is-hidden")
+          searchList.search(event.target.value);
+        } else {
+          searchDiv.classList.add("is-hidden")
+        }
+
+    })
+  }
+
+  /**
+   * Hide Or Show Element
+   * @param {string} id
+   * @param {boolean} show
+   * @private
+   */
+  _updateShow(id, show) {
+    if (this.shadowRoot) {
+      let search = this.shadowRoot.getElementById(id);
+      if (!show) {
+        search.classList.add("is-hidden");
+      } else {
+        search.classList.remove("is-hidden");
+      }
+    }
+  }
+
+  _dispatchChange() {
+    let event = new Event('change', {target: this})
+    this.dispatchEvent(event);
+  }
+
+  /**
+   * Building Search-List
+   * @returns {VetproviehList}
+   * @private
+   */
+  _buildSearchList() {
+    let searchList = new VetproviehList(this._properties.list_element_template);
+    searchList.searchable = false;
+    searchList.pageable = false;
+    searchList.src = this.src;
+    searchList.pagesize = 15;
+
+    let _this = this;
+    searchList.addEventListener("selected", (event) => {
+      let searchField = this.shadowRoot.getElementById("search");
+      searchField.value = event.data[_this.display];
+      _this.value = event.data[_this.property];
+      this._updateShow("list", false);
+    })
+
+    return searchList;
+  }
 }
 
 window.customElements.define('vetprovieh-select', VetproviehSelect);
