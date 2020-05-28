@@ -1,18 +1,16 @@
 import{ VetproviehList } from '@tomuench/vetprovieh-list';
-
+import { ObjectHelper, VetproviehElement } from '@tomuench/vetprovieh-shared';
 /**
  * `vetprovieh-select`
  * Element for Selecting a Model out of a Data-Source.
  *
  * @customElement
- * @polymer
  * @demo demo/index.html
  */
-class VetproviehSelect extends HTMLElement {
+class VetproviehSelect extends VetproviehElement {
 
   static get template() {
-    return `
-      <link href="../node_modules/bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
+    return super.template + `
       <style>
       #list {
         box-shadow: 1px 3px 5px #C0C0C0;
@@ -35,12 +33,6 @@ class VetproviehSelect extends HTMLElement {
 
   static get observedAttributes() {
     return ['src','value', 'property', 'display'];
-  }
-
-  attributeChangedCallback(name, old, value) {
-    if (old !== value) {
-      this[name] = value;
-    }
   }
 
   constructor(props) {
@@ -143,22 +135,7 @@ class VetproviehSelect extends HTMLElement {
     })
   }
 
-  /**
-   * Hide Or Show Element
-   * @param {string} id
-   * @param {boolean} show
-   * @private
-   */
-  _updateShow(id, show) {
-    if (this.shadowRoot) {
-      let search = this.shadowRoot.getElementById(id);
-      if (!show) {
-        search.classList.add("is-hidden");
-      } else {
-        search.classList.remove("is-hidden");
-      }
-    }
-  }
+
 
   _dispatchChange() {
     let event = new Event('change', {target: this})
@@ -180,9 +157,9 @@ class VetproviehSelect extends HTMLElement {
     let _this = this;
     searchList.addEventListener("selected", (event) => {
       let searchField = this.shadowRoot.getElementById("search");
-      searchField.value = event.data[_this.display];
-      _this.value = event.data[_this.property];
-      this._updateShow("list", false);
+      searchField.value = ObjectHelper.get(event.data,_this.display);
+      _this.value = ObjectHelper.get(event.data, _this.property);
+      this.updateVisbility("list", false);
     })
 
     return searchList;
