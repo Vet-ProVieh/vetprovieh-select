@@ -1,46 +1,10 @@
 [
     {
-        "id": "1",
-        "name": "Paul Panzer"
+        "id": 1,
+        "name": "Max Müller"
     },
     {
-        "id": "2",
-        "name": "Dagobert Duck"
-    },
-    {
-        "id": "3",
-        "name": "Micky Maus"
-    },
-    {
-        "id": "4",
-        "name": "Franz Brandtwein"
-    },
-    {
-        "id": "5",
-        "name": "Max Mustermann"
-    },
-    {
-        "id": "6",
-        "name": "Isaac Pauli"
-    },
-    {
-        "id": "7",
-        "name": "Mr Universe"
-    },
-    {
-        "id": "8",
-        "name": "Mrs Universe "
-    },
-    {
-        "id": "9",
-        "name": "Marry Poppins"
-    },
-    {
-        "id": "10",
-        "name": "Maximiliane Mustermann"
-    },
-    {
-        "id": "11",
-        "name": "Renate Granate"
+        "id": 2,
+        "name": "Petra Meyer"
     }
 ]
