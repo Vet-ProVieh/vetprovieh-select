@@ -1,5 +1,6 @@
 import { VetproviehList } from '@tomuench/vetprovieh-list/lib/vetprovieh-list';
-import { ObjectHelper, VetproviehElement } from '@tomuench/vetprovieh-shared';
+import { ObjectHelper, VetproviehElement } from '@tomuench/vetprovieh-shared/lib';
+import { WebComponent, BaseRepository } from '@tomuench/vetprovieh-shared/lib';
 /**
  * `vetprovieh-select`
  * Element for Selecting a Model out of a Data-Source.
@@ -7,48 +8,53 @@ import { ObjectHelper, VetproviehElement } from '@tomuench/vetprovieh-shared';
  * @customElement
  * @demo demo/index.html
  */
-export class VetproviehSelect extends VetproviehElement {
 
-  /**
-   * Getting Template
-   * @return {string}
-   */
-  static get template() {
-    return super.template + `
-      <style>
-      #list {
-        box-shadow: 1px 3px 5px #C0C0C0;
-        margin-top: -20px;
-        margin-left: 10px;
-        width:100%;
-        position: absolute;
-        z-index: 1000;
-        background: white;
-        }
-      </style>
-      <div>
-        <input id="search" class="input" type="search"/>
-        <input id="currentValue" type="hidden"/>
-        <div id="list" class="is-hidden">
-        </div>
-      </div>
-    `;
-  }
+@WebComponent({
+  template: VetproviehElement.template + `
+            <style>
+            #list {
+              box-shadow: 1px 3px 5px #C0C0C0;
+              margin-top: -20px;
+              margin-left: 10px;
+              width:100%;
+              position: absolute;
+              z-index: 1000;
+              background: white;
+              }
+            :host(.is-danger) input {
+              border-color: #f14668;
+             }
+             :host(.is-success) input {
+               border-color: #48c774;
+             }
+                 
+            </style>
+            <div>
+              <input id="search" class="input" type="search"/>
+              <input id="currentValue" type="hidden"/>
+              <div id="list" class="is-hidden">
+                <vetprovieh-list id="farmerList"></vetprovieh-list>
+              </div>
+            </div>`,
+  tag: 'vetprovieh-select'
+})
+export class VetproviehSelect extends VetproviehElement {
 
   /**
    * Observered Attributes
    * @return {Array<string>}
    */
   static get observedAttributes() {
-    return ['src', 'value', 'property', 'display'];
+    return ['value', 'property', 'display'];
   }
 
 
-  private _src: string = "";
+  private _repository: BaseRepository<any>;
   private _list_element_template: HTMLTemplateElement;
   private _searchList: VetproviehList;
   private _value: string;
   private _property: string;
+  private _internalProperty: string;
   private _display: string;
 
   /**
@@ -60,6 +66,21 @@ export class VetproviehSelect extends VetproviehElement {
 
     let template = this.querySelector("template");
     if (template) this._list_element_template = template;
+  }
+
+
+  /**
+   * @property {BaseRepository|null} value
+   */
+  get repository() {
+    return this._repository;
+  }
+
+  set repository(val) {
+    if (val !== this.repository) {
+      this._repository = val;
+      this._addFieldListener();
+    }
   }
 
   /**
@@ -99,30 +120,13 @@ export class VetproviehSelect extends VetproviehElement {
   set property(val) {
     if (val !== this.property) {
       this._property = val;
+      if (val) this._internalProperty = val.substring(val.indexOf(".") + 1);
     }
   }
 
-  /**
-   * @property {string|null} src
-   */
-  get src() {
-    return this._src;
-  }
-
-  set src(val) {
-    if (val !== this.src) {
-      this._src = val;
-    }
-  }
 
   connectedCallback() {
-    // Lazy creation of shadowRoot.
-    if (!this.shadowRoot) {
-      this.attachShadow({
-        mode: 'open'
-      }).innerHTML = VetproviehSelect.template;
-    }
-    this._addFieldListener();
+    super.connectedCallback();
   }
 
   /**
@@ -133,7 +137,6 @@ export class VetproviehSelect extends VetproviehElement {
 
     if (!this._searchList) {
       this._searchList = this._buildSearchList();
-      this.shadowRoot.getElementById("list").appendChild(this._searchList)
     }
 
     let searchDiv = this.shadowRoot.getElementById("list");
@@ -153,12 +156,37 @@ export class VetproviehSelect extends VetproviehElement {
 
 
   /**
+   * Is Element Valid?
+   * @return {Boolean}
+   */
+  public reportValidity(): Boolean {
+    return this.value !== undefined && this.value !== null;
+  }
+
+  /**
    * Dispatch Change event to the outer World
    */
   _dispatchChange() {
-    let eventData =  { target: this };
+    let eventData = { target: this };
     let event = new Event('change')
     this.dispatchEvent(event);
+    this.dispatchEvent(new Event("blur"));
+  }
+
+  _presetInput(searchList: VetproviehList) {
+    if (this.value) {
+      searchList._filterObjects(this.value);
+      searchList.addEventListener("loaded", (event) => {
+        let obj = searchList.objects.filter((obj) => obj[this._internalProperty] === this.value)[0];
+        if (obj) {
+          this.searchField.value = ObjectHelper.get(obj, this.display);
+        }
+      })
+    }
+  }
+
+  private get searchField(): HTMLInputElement {
+    return this.shadowRoot.getElementById("search") as HTMLInputElement;
   }
 
   /**
@@ -167,18 +195,20 @@ export class VetproviehSelect extends VetproviehElement {
    * @private
    */
   _buildSearchList() {
-    let searchList = new VetproviehList(this._list_element_template);
+    let searchList = this.shadowRoot.getElementById("farmerList") as VetproviehList;
+    searchList.setlistTemplate(this._list_element_template);
     searchList.searchable = false;
     searchList.pageable = false;
-    searchList.src = this.src;
+    searchList.repository = this.repository;
     searchList.pagesize = 15;
+
+    this._presetInput(searchList);
 
     let _this = this;
     searchList.addEventListener("selected", (event) => {
-      let searchField = this.shadowRoot.getElementById("search") as HTMLInputElement;
       let data = (event as any).data;
-      searchField.value = ObjectHelper.get(data, _this.display);
-      _this.value = ObjectHelper.get(data, _this.property);
+      this.searchField.value = ObjectHelper.get(data, _this.display);
+      _this.value = ObjectHelper.get(data, _this._internalProperty);
       this.updateVisibility("list", false);
     })
 
@@ -186,4 +216,3 @@ export class VetproviehSelect extends VetproviehElement {
   }
 }
 
-window.customElements.define('vetprovieh-select', VetproviehSelect);
