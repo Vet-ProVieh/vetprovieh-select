@@ -124,6 +124,13 @@ export class VetproviehSelect extends VetproviehElement {
     }
   }
 
+  /**
+   * Deactivate-Field
+   */
+  public disable() {
+    console.log("Disable field")
+    this.searchField.disabled = true;
+  }
 
   connectedCallback() {
     super.connectedCallback();
@@ -177,7 +184,8 @@ export class VetproviehSelect extends VetproviehElement {
     if (this.value) {
       searchList._filterObjects(this.value);
       searchList.addEventListener("loaded", (event) => {
-        let obj = searchList.objects.filter((obj) => obj[this._internalProperty] === this.value)[0];
+        let obj = searchList.objects.filter((obj) => obj[this._internalProperty].toString() === this.value.toString())[0];
+        console.log("loaded select");
         if (obj) {
           this.searchField.value = ObjectHelper.get(obj, this.display);
         }
