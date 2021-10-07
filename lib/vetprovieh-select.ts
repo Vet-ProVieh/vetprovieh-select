@@ -32,7 +32,7 @@ import { WebComponent, BaseRepository } from '@tomuench/vetprovieh-shared/lib';
             <div>
               <input id="search" class="input" type="search"/>
               <input id="currentValue" type="hidden"/>
-              <div id="list" class="is-hidden">
+              <div id="list" class="is-hidden" style="overflow-y:scroll; max-height:12em">
                 <vetprovieh-list id="farmerList"></vetprovieh-list>
               </div>
             </div>`,
@@ -45,7 +45,7 @@ export class VetproviehSelect extends VetproviehElement {
    * @return {Array<string>}
    */
   static get observedAttributes() {
-    return ['value', 'property', 'display'];
+    return ['value', 'property', 'display', 'internalprop'];
   }
 
 
@@ -68,6 +68,14 @@ export class VetproviehSelect extends VetproviehElement {
     if (template) this._list_element_template = template;
   }
 
+
+  get internalprop(): string {
+    return this._internalProperty;
+  }
+
+  set internalprop(v: string) {
+    this._internalProperty = v;
+  }
 
   /**
    * @property {BaseRepository|null} value
@@ -120,7 +128,7 @@ export class VetproviehSelect extends VetproviehElement {
   set property(val) {
     if (val !== this.property) {
       this._property = val;
-      if (val) this._internalProperty = val.substring(val.indexOf(".") + 1);
+      if (val && !this.internalprop) this._internalProperty = val.substring(val.indexOf(".") + 1);
     }
   }
 
@@ -214,7 +222,7 @@ export class VetproviehSelect extends VetproviehElement {
 
     let _this = this;
     searchList.addEventListener("selected", (event) => {
-      let data = (event as any).data;
+      let data = (event as any).detail;
       this.searchField.value = ObjectHelper.get(data, _this.display);
       _this.value = ObjectHelper.get(data, _this._internalProperty);
       this.updateVisibility("list", false);
