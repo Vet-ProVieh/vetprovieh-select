@@ -57,6 +57,8 @@ export class VetproviehSelect extends VetproviehElement {
   private _internalProperty: string;
   private _display: string;
 
+  public selectedObject: any;
+
   /**
    * Defaultkonstructor
    * @param props 
@@ -224,6 +226,7 @@ export class VetproviehSelect extends VetproviehElement {
     searchList.addEventListener("selected", (event) => {
       let data = (event as any).detail;
       this.searchField.value = ObjectHelper.get(data, _this.display);
+      _this.selectedObject = data;
       _this.value = ObjectHelper.get(data, _this._internalProperty);
       this.updateVisibility("list", false);
     })
