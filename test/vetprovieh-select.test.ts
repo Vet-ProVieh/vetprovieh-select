@@ -1,5 +1,4 @@
-import { ListItem } from '@vetprovieh/vetprovieh-list/lib/list-item';
-import { VetproviehList } from '@vetprovieh/vetprovieh-list/lib/vetprovieh-list';
+import { VetproviehList } from '@vetprovieh/vetprovieh-list';
 import fetch, { enableFetchMocks } from 'jest-fetch-mock';
 import { VetproviehSelect } from "../lib/vetprovieh-select";
 import { PersonRepository } from './mockups/personRepository';
@@ -27,7 +26,7 @@ fetch.mockResponse(JSON.stringify(data));
 /**
  * Generating Demo-Select
  */
-const generateSelect = (presetValue = undefined) => {
+const generateSelect = (presetValue: string | undefined = undefined) => {
     const template = document.createElement("template");
     template.innerHTML = "{{id}} {{name}}";
     
@@ -49,7 +48,7 @@ const generateSelect = (presetValue = undefined) => {
 }
 
 const listFromSelect = (select : VetproviehSelect) => {
-    return select.shadowRoot.getElementById("farmerList");
+    return select.shadowRoot?.getElementById("farmerList");
 }
 
 describe("search", () => {
@@ -57,25 +56,23 @@ describe("search", () => {
     const list = listFromSelect(selector) as VetproviehList;
     list.connectedCallback();
 
-    test('should show all Elements', () => {
-        expect(list.objects.length).toEqual(2)
-    });
-
-    test('should filter Elements', () => {
+    test('should filter Elements', (done) => {
         selector.search("Paul");
-        setTimeout(() => expect(list.objects.length).toEqual(1), 200);
+        setTimeout(() => {
+            done(!(list.objects.length === 1))
+        }, 200);
     });
 
     test('should show searchDiv', () => {
-        const searchDiv = selector.shadowRoot.getElementById('list');
+        const searchDiv = selector.shadowRoot?.getElementById('list');
 
         selector.search("");
 
-        expect(searchDiv.classList.contains("is-hidden")).toEqual(true);
+        expect(searchDiv?.classList.contains("is-hidden")).toEqual(true);
 
         selector.search("Paul");
 
-        expect(searchDiv.classList.contains("is-hidden")).toEqual(false);
+        expect(searchDiv?.classList.contains("is-hidden")).toEqual(false);
         
     });
 
@@ -106,14 +103,14 @@ describe('select', () => {
 
 
     test('should select object', () => {
-        const listItem = list.shadowRoot.querySelector("list-item") as any; 
+        const listItem = list.shadowRoot?.querySelector("list-item") as any; 
         listItem.dispatchEvent(new Event("click"));
         expect(selector.selectedObject).toEqual(listItem._data);
     });
 
 
     test('should set value to internalProperty', () => {
-        const listItem = list.shadowRoot.querySelector("list-item") as any; 
+        const listItem = list.shadowRoot?.querySelector("list-item") as any; 
         listItem.dispatchEvent(new Event("click"));
         expect(selector.value).toEqual(listItem._data.id);
     });
@@ -130,7 +127,7 @@ describe('reportValidity', () => {
     });
 
     test('should be true if something is set', () => {
-        const listItem = list.shadowRoot.querySelector("list-item") as any; 
+        const listItem = list.shadowRoot?.querySelector("list-item") as any; 
         listItem.dispatchEvent(new Event("click"));
 
         expect(selector.reportValidity()).toBeTruthy();        
