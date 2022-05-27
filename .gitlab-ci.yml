@@ -1,8 +1,9 @@
 stages:
   - test
   - lint
-  - build
   - publish
+
+image: node:alpine
 
 cache:
   key: node_modules
@@ -24,16 +25,13 @@ lint:
   script:
     - npm run lint
 
-build:
-  stage: build
-  script:
-    - npm run build
-
 publish:
   stage: publish
   before_script:
     - echo "Creating NPM-RC"
     - echo ".npm" >> .npmignore
     - echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+    - npm install
   script: 
+    - npm run build
     - npm publish --access public
